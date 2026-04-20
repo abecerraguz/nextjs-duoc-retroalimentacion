@@ -5,12 +5,9 @@ import pg from "pg"
 const globalForPrisma = globalThis
 
 const createAdapter = () => {
-  // En Railway el servidor Postgres interno no tiene certificado TLS válido.
-  // RAILWAY_ENVIRONMENT_NAME es inyectada automáticamente por Railway en producción.
-  const isRailway = !!process.env.RAILWAY_ENVIRONMENT_NAME || !!process.env.RAILWAY_SERVICE_ID
   const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: isRailway ? false : { rejectUnauthorized: false },
+    ssl: { rejectUnauthorized: false, checkServerIdentity: () => undefined },
   })
   return new PrismaPg(pool)
 }
