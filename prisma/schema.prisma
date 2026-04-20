@@ -18,7 +18,7 @@ model User {
 
 model Seccion {
   id           String       @id @default(cuid())
-  codigo       String       // e.g. "IFD2201-001"
+  codigo       String       @unique // e.g. "IFD2201-001"
   asignatura   String       // e.g. "Lenguajes de Programación"
   semestre     String       // e.g. "2026-1"
   activa       Boolean      @default(true)

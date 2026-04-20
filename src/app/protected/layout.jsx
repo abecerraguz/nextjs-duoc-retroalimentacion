@@ -5,7 +5,7 @@ import Cookies from 'js-cookie'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import {
   faGauge, faLayerGroup, faUsers, faClipboardList,
-  faChalkboard, faIdCard, faRightFromBracket
+  faChalkboard, faIdCard, faRightFromBracket, faBrain
 } from '@fortawesome/free-solid-svg-icons'
 
 const navItems = [
@@ -14,6 +14,7 @@ const navItems = [
   { href: '/protected/alumnos',      label: 'Alumnos',       icon: faUsers },
   { href: '/protected/evaluaciones', label: 'Evaluaciones',  icon: faClipboardList },
   { href: '/protected/calificar',    label: 'Calificar',     icon: faChalkboard },
+  { href: '/protected/ia-feedback',  label: 'IA Feedback',   icon: faBrain, badge: 'IA' },
 ]
 
 export default function ProtectedLayout({ children }) {
@@ -49,6 +50,11 @@ export default function ProtectedLayout({ children }) {
               >
                 <FontAwesomeIcon icon={item.icon} className="w-4 h-4" />
                 {item.label}
+                {item.badge && (
+                  <span className="ml-auto text-xs bg-secondary text-white px-1.5 py-0.5 rounded font-bold">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             )
           })}
