@@ -14,9 +14,9 @@ async function main() {
   // Admin
   const hash = await bcrypt.hash('duoc2024', 10)
   const admin = await prisma.user.upsert({
-    where: { email: 'profesor@duoc.cl' },
+    where: { email: 'ale.becerrag@profesor.duoc.cl' },
     update: {},
-    create: { email: 'profesor@duoc.cl', password: hash, nombre: 'Profesor Demo' },
+    create: { email: 'ale.becerrag@profesor.duoc.cl', password: hash, nombre: 'Profesor Demo' },
   })
   console.log('✅ Usuario admin:', admin.email)
 
@@ -116,7 +116,7 @@ async function main() {
   console.log('✅ Evaluaciones creadas')
   console.log('')
   console.log('🔐 Credenciales de acceso:')
-  console.log('   Email:    profesor@duoc.cl')
+  console.log('   Email:    ale.becerrag@profesor.duoc.cl')
   console.log('   Password: duoc2024')
   console.log('')
 }

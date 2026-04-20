@@ -3,6 +3,7 @@ import { useFormik } from 'formik'
 import * as Yup from 'yup'
 import { useRouter } from 'next/navigation'
 import Cookies from 'js-cookie'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -31,8 +32,8 @@ export default function LoginPage() {
       <div className="card w-full max-w-sm bg-base-100 shadow-xl">
         <div className="card-body">
           <div className="text-center mb-4">
-            <div className="inline-block bg-primary text-primary-content px-4 py-1 rounded-full text-xs uppercase tracking-widest mb-3">
-              DUOC UC
+            <div className="flex justify-center mb-3">
+              <Image src="/aula.png" alt="Aula" width={72} height={72} priority />
             </div>
             <h1 className="text-2xl font-bold text-primary">Retroalimentación</h1>
             <p className="text-sm text-gray-500 mt-1">Gestión Efectiva de Evaluaciones</p>
