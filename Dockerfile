@@ -16,4 +16,4 @@ EXPOSE 3000
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-CMD ["npm", "start"]
+CMD ["sh", "-c", "npx prisma migrate deploy --config prisma.config.mjs && npm start"]
