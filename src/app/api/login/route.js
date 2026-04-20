@@ -16,6 +16,7 @@ export async function POST(request) {
     const token = signToken({ id: user.id, email: user.email, nombre: user.nombre })
     return NextResponse.json({ token, nombre: user.nombre }, { status: 200 })
   } catch (error) {
-    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+    console.error('[LOGIN ERROR]', error)
+    return NextResponse.json({ error: error?.message ?? 'Error interno' }, { status: 500 })
   }
 }
