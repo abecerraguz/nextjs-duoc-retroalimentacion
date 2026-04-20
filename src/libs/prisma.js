@@ -5,9 +5,11 @@ import pg from "pg"
 const globalForPrisma = globalThis
 
 const createAdapter = () => {
+  const url = process.env.DATABASE_URL ?? ''
+  const isInternal = url.includes('.railway.internal') || url.includes('localhost') || url.includes('127.0.0.1')
   const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
+    connectionString: url,
+    ssl: isInternal ? false : { rejectUnauthorized: false },
   })
   return new PrismaPg(pool)
 }
