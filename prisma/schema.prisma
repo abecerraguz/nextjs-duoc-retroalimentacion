@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  nombre    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Seccion {
+  id           String       @id @default(cuid())
+  codigo       String       // e.g. "IFD2201-001"
+  asignatura   String       // e.g. "Lenguajes de Programación"
+  semestre     String       // e.g. "2026-1"
+  activa       Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  alumnos      Alumno[]
+  evaluaciones Evaluacion[]
+}
+
+model Alumno {
+  id             String         @id @default(cuid())
+  nombre         String
+  apellido       String
+  email          String?        @unique
+  esPPD          Boolean        @default(false)
+  adaptaciones   String?        @db.Text
+  umbralAlerta   Float          @default(4.0)
+  activo         Boolean        @default(true)
+  seccionId      String
+  seccion        Seccion        @relation(fields: [seccionId], references: [id], onDelete: Cascade)
+  calificaciones Calificacion[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+}
+
+enum TipoEvaluacion {
+  FORMATIVA
+  SUMATIVA
+}
+
+model Evaluacion {
+  id             String            @id @default(cuid())
+  nombre         String
+  tipo           TipoEvaluacion
+  semana         Int
+  ponderacion    Float             @default(0)
+  seccionId      String
+  seccion        Seccion           @relation(fields: [seccionId], references: [id], onDelete: Cascade)
+  criterios      CriterioRubrica[]
+  calificaciones Calificacion[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+enum NivelLogro {
+  CL
+  L
+  ML
+  LI
+  NL
+}
+
+model CriterioRubrica {
+  id           String          @id @default(cuid())
+  descripcion  String          @db.Text
+  orden        Int
+  evaluacionId String
+  evaluacion   Evaluacion      @relation(fields: [evaluacionId], references: [id], onDelete: Cascade)
+  logros       LogroCriterio[]
+}
+
+model Calificacion {
+  id                String             @id @default(cuid())
+  alumnoId          String
+  evaluacionId      String
+  nota              Float?
+  alumno            Alumno             @relation(fields: [alumnoId], references: [id], onDelete: Cascade)
+  evaluacion        Evaluacion         @relation(fields: [evaluacionId], references: [id], onDelete: Cascade)
+  logros            LogroCriterio[]
+  retroalimentacion RetroAlimentacion?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  @@unique([alumnoId, evaluacionId])
+}
+
+model LogroCriterio {
+  id             String          @id @default(cuid())
+  nivel          NivelLogro
+  observacion    String?         @db.Text
+  calificacionId String
+  criterioId     String
+  calificacion   Calificacion    @relation(fields: [calificacionId], references: [id], onDelete: Cascade)
+  criterio       CriterioRubrica @relation(fields: [criterioId], references: [id], onDelete: Cascade)
+
+  @@unique([calificacionId, criterioId])
+}
+
+model RetroAlimentacion {
+  id               String       @id @default(cuid())
+  calificacionId   String       @unique
+  haciaDondeVoy    String?      @db.Text
+  fortalezas       String?      @db.Text
+  porMejorar       String?      @db.Text
+  aspectosLogrados String?      @db.Text
+  comoSigo         String?      @db.Text
+  calificacion     Calificacion @relation(fields: [calificacionId], references: [id], onDelete: Cascade)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
