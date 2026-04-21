@@ -25,13 +25,20 @@ function ModalAlumno({ alumno, secciones, onClose, onSaved }) {
       apellido: Yup.string().required('Requerido'),
       seccionId: Yup.string().required('Selecciona una sección'),
     }),
-    onSubmit: async (values) => {
+    onSubmit: async (values, { setStatus }) => {
       const url = isEdit ? `/api/alumnos/${alumno.id}` : '/api/alumnos'
-      await fetch(url, {
+      const payload = { ...values, umbralAlerta: +values.umbralAlerta }
+      if (!payload.email) payload.email = null
+      const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...values, umbralAlerta: +values.umbralAlerta }),
+        body: JSON.stringify(payload),
       })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        setStatus(err.error ?? 'Error al guardar')
+        return
+      }
       onSaved()
       onClose()
     },
@@ -107,6 +114,7 @@ function ModalAlumno({ alumno, secciones, onClose, onSaved }) {
             </>
           )}
 
+          {formik.status && <p className="text-error text-sm text-center">{formik.status}</p>}
           <button type="submit" className="btn btn-primary btn-sm w-full mt-4"
             disabled={formik.isSubmitting}>
             {formik.isSubmitting ? <span className="loading loading-spinner loading-xs" /> : 'Guardar'}
