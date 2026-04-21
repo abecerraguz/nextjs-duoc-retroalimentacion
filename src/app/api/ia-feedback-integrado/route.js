@@ -1,6 +1,6 @@
 import JSZip from 'jszip'
 import Anthropic from '@anthropic-ai/sdk'
-import prisma from '@/libs/prisma'
+import { prisma } from '@/libs/prisma'
 
 export const maxDuration = 300
 

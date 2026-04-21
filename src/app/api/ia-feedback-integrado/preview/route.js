@@ -1,5 +1,5 @@
 import JSZip from 'jszip'
-import prisma from '@/libs/prisma'
+import { prisma } from '@/libs/prisma'
 
 function normalize(str) {
   return str
