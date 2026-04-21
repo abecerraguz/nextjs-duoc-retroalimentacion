@@ -28,12 +28,15 @@ async function evaluateWithClaude(anthropic, alumnoNombre, filesContent, evaluac
 Analiza el código del alumno y evalúa cada criterio de la rúbrica con rigor y precisión.
 RESPONDE ÚNICAMENTE con JSON válido. Sin markdown, sin texto adicional fuera del JSON.
 
-REGLAS CRÍTICAS ANTI-ALUCINACIÓN:
-- Evalúa SOLO lo que está literalmente presente en los archivos entregados.
-- Si el alumno no entregó un archivo o funcionalidad, di que no se encontró — NO inventes que "tiene errores de X".
-- NUNCA menciones errores, bugs o problemas que no puedas señalar con nombre de archivo y línea aproximada real.
-- Si la carpeta está vacía o los archivos no son relevantes para el criterio, asigna NL con observación "No se encontraron archivos evaluables".
-- Las observaciones deben ser verificables: menciona nombres de archivos, funciones o variables reales que veas en el código.`
+REGLAS CRÍTICAS ANTI-ALUCINACIÓN — OBLIGATORIAS:
+1. Lee cada archivo COMPLETO antes de emitir cualquier juicio.
+2. NUNCA afirmes que falta cerrar una llave, una función, un bloque o cualquier error sintáctico sin haber contado las llaves manualmente en el código real. Los errores sintácticos solo se mencionan si el archivo claramente no parsea.
+3. NUNCA menciones errores, bugs o problemas que no puedas citar con: nombre de archivo + fragmento de código real.
+4. Evalúa SOLO lo que está literalmente presente en los archivos entregados. Si algo no está, di que no se encontró — NO inventes.
+5. Si la carpeta está vacía asigna NL con observación "No se encontraron archivos evaluables".
+6. Las observaciones de cada criterio deben citar nombres reales de funciones, variables o archivos del código entregado.
+7. El saludo debe ser cordial, motivador y mencionar algo positivo concreto del trabajo.
+8. El cierre debe ser una frase de aliento breve y honesta — OBLIGATORIO incluirlo.`
 
   const userMsg = `**Evaluación:** ${evaluacion.nombre} (${isFormativa ? 'Formativa — escala 1-10' : 'Sumativa — escala 1-7'})
 **Alumno:** ${alumnoNombre}
@@ -46,15 +49,17 @@ ${filesText}
 ${extraContext ? `\n**⚠️ INSTRUCCIONES OBLIGATORIAS DEL DOCENTE — DEBES APLICARLAS AL EVALUAR Y EN EL FEEDBACK:**\n${extraContext}\n` : ''}
 Responde con este JSON exacto (sin markdown):
 {
+  "saludo": "<1-2 oraciones: saludo cordial por nombre, menciona algo concreto y positivo que viste en su código>",
   "logros": [
-    {"criterioId": "<id exacto del criterio>", "nivel": "<CL|L|ML|LI|NL>", "observacion": "<observación específica del código del alumno para este criterio, max 80 caracteres>"}
+    {"criterioId": "<id exacto del criterio>", "nivel": "<CL|L|ML|LI|NL>", "observacion": "<cita función/variable/archivo real del código para justificar el nivel, max 100 caracteres>"}
   ],
   "haciaDondeVoy": "<objetivo y propósito de la actividad, 2-3 oraciones>",
   ${isFormativa
-    ? '"fortalezas": "<lo que el alumno hizo bien, específico con el código entregado>",'
-    : '"aspectosLogrados": "<lo que el alumno demostró haber aprendido según los criterios>",'}
-  "porMejorar": "<qué debe corregir o profundizar, con ejemplos concretos del código>",
-  "comoSigo": "<2-3 pasos concretos y alcanzables para mejorar>"
+    ? '"fortalezas": "<lo que el alumno hizo bien — cita nombres de funciones o archivos reales del código entregado>",'
+    : '"aspectosLogrados": "<lo que el alumno demostró — cita evidencia real del código entregado>",'}
+  "porMejorar": "<SOLO menciona mejoras con evidencia real en el código — cita archivo y fragmento. Si el código funciona correctamente, menciona solo sugerencias opcionales de mejora>",
+  "comoSigo": "<2-3 pasos concretos y alcanzables basados en el código real entregado>",
+  "cierre": "<1 oración de cierre motivadora y honesta, personalizada para el alumno>"
 }
 
 Niveles: CL=100% L=80% ML=60% LI=30% NL=0%
@@ -83,8 +88,7 @@ function buildFeedbackMd(alumnoNombre, result, evaluacion, nota) {
     `**Evaluación:** ${evaluacion.nombre}`,
     `**Nota:** ${nota} ${isFormativa ? '(escala 1-10)' : '(escala 1-7)'}`,
     ``,
-    `---`,
-    ``,
+    ...(result.saludo ? [result.saludo, ``, `---`, ``] : []),
     `## 🎯 ¿Hacia dónde voy?`,
     ``,
     result.haciaDondeVoy,
@@ -116,6 +120,7 @@ function buildFeedbackMd(alumnoNombre, result, evaluacion, nota) {
     ``,
     `---`,
     ``,
+    ...(result.cierre ? [result.cierre, ``] : []),
     `*Retroalimentación Efectiva — DUOC UC ${new Date().getFullYear()} · Generada con apoyo de IA*`,
   ]
   return lines.join('\n')
