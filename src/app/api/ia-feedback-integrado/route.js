@@ -26,7 +26,14 @@ async function evaluateWithClaude(anthropic, alumnoNombre, filesContent, evaluac
 
   const systemPrompt = `Eres un docente evaluador de DUOC UC especializado en desarrollo web.
 Analiza el código del alumno y evalúa cada criterio de la rúbrica con rigor y precisión.
-RESPONDE ÚNICAMENTE con JSON válido. Sin markdown, sin texto adicional fuera del JSON.`
+RESPONDE ÚNICAMENTE con JSON válido. Sin markdown, sin texto adicional fuera del JSON.
+
+REGLAS CRÍTICAS ANTI-ALUCINACIÓN:
+- Evalúa SOLO lo que está literalmente presente en los archivos entregados.
+- Si el alumno no entregó un archivo o funcionalidad, di que no se encontró — NO inventes que "tiene errores de X".
+- NUNCA menciones errores, bugs o problemas que no puedas señalar con nombre de archivo y línea aproximada real.
+- Si la carpeta está vacía o los archivos no son relevantes para el criterio, asigna NL con observación "No se encontraron archivos evaluables".
+- Las observaciones deben ser verificables: menciona nombres de archivos, funciones o variables reales que veas en el código.`
 
   const userMsg = `**Evaluación:** ${evaluacion.nombre} (${isFormativa ? 'Formativa — escala 1-10' : 'Sumativa — escala 1-7'})
 **Alumno:** ${alumnoNombre}
@@ -57,6 +64,7 @@ Evalúa ${evaluacion.criterios.length} criterio(s) — uno por cada ID listado.`
   const response = await anthropic.messages.create({
     model: 'claude-opus-4-5',
     max_tokens: 1800,
+    temperature: 0,
     system: systemPrompt,
     messages: [{ role: 'user', content: userMsg }],
   })
