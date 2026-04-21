@@ -30,13 +30,13 @@ RESPONDE ÚNICAMENTE con JSON válido. Sin markdown, sin texto adicional fuera d
 
   const userMsg = `**Evaluación:** ${evaluacion.nombre} (${isFormativa ? 'Formativa — escala 1-10' : 'Sumativa — escala 1-7'})
 **Alumno:** ${alumnoNombre}
-${extraContext ? `**Contexto adicional del docente:** ${extraContext}\n` : ''}
+
 **Criterios de la rúbrica (debes evaluar TODOS):**
 ${criteriosText}
 
 **Archivos entregados por el alumno:**
 ${filesText}
-
+${extraContext ? `\n**⚠️ INSTRUCCIONES OBLIGATORIAS DEL DOCENTE — DEBES APLICARLAS AL EVALUAR Y EN EL FEEDBACK:**\n${extraContext}\n` : ''}
 Responde con este JSON exacto (sin markdown):
 {
   "logros": [
