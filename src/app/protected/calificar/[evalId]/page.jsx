@@ -40,15 +40,10 @@ function NotaBadge({ nota, tipo }) {
 export default function CalificarPage({ params }) {
   const { evalId } = use(params)
   const router = useRouter()
-  const { data: evaluacion, isLoading } = useSWR(`/api/evaluaciones/${evalId}`, fetcher)
-  const [logros, setLogros] = useState({}) // { alumnoId: { criterioId: nivel } }
-  const [observaciones, setObservaciones] = useState({}) // { alumnoId: { criterioId: texto } }
-  const [saving, setSaving] = useState(null)
-  const [saved, setSaved] = useState({})
-
-  // Pre-cargar calificaciones existentes
-  useSWR(evaluacion ? `/api/evaluaciones/${evalId}` : null, fetcher, {
+  const [initialized, setInitialized] = useState(false)
+  const { data: evaluacion, isLoading, mutate } = useSWR(`/api/evaluaciones/${evalId}`, fetcher, {
     onSuccess: (data) => {
+      if (initialized) return
       const initLogros = {}
       const initObs = {}
       for (const cal of data.calificaciones ?? []) {
@@ -59,10 +54,16 @@ export default function CalificarPage({ params }) {
           initObs[cal.alumnoId][logro.criterioId] = logro.observacion ?? ''
         }
       }
-      setLogros(prev => ({ ...initLogros, ...prev }))
-      setObservaciones(prev => ({ ...initObs, ...prev }))
+      setLogros(initLogros)
+      setObservaciones(initObs)
+      setInitialized(true)
     },
   })
+  const [logros, setLogros] = useState({}) // { alumnoId: { criterioId: nivel } }
+  const [observaciones, setObservaciones] = useState({}) // { alumnoId: { criterioId: texto } }
+  const [saving, setSaving] = useState(null)
+  const [saved, setSaved] = useState({})
+  const [saveError, setSaveError] = useState({})
 
   const setNivel = (alumnoId, criterioId, nivel) => {
     setLogros(prev => ({
@@ -89,14 +90,25 @@ export default function CalificarPage({ params }) {
     }))
 
     setSaving(alumnoId)
-    await fetch('/api/calificaciones', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ alumnoId, evaluacionId: evalId, logros: logrosList }),
-    })
-    setSaving(null)
-    setSaved(prev => ({ ...prev, [alumnoId]: true }))
-    setTimeout(() => setSaved(prev => { const n = {...prev}; delete n[alumnoId]; return n }), 2000)
+    setSaveError(prev => { const n = { ...prev }; delete n[alumnoId]; return n })
+    try {
+      const res = await fetch('/api/calificaciones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alumnoId, evaluacionId: evalId, logros: logrosList }),
+      })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error ?? `Error ${res.status}`)
+      }
+      await mutate()
+      setSaved(prev => ({ ...prev, [alumnoId]: true }))
+      setTimeout(() => setSaved(prev => { const n = { ...prev }; delete n[alumnoId]; return n }), 2000)
+    } catch (err) {
+      setSaveError(prev => ({ ...prev, [alumnoId]: err.message }))
+    } finally {
+      setSaving(null)
+    }
   }
 
   const handleRetro = (alumnoId) => {
@@ -224,14 +236,17 @@ export default function CalificarPage({ params }) {
                   <td>
                     <div className="flex flex-col gap-1">
                       <button
-                        className={`btn btn-xs ${saved[alumno.id] ? 'btn-success' : 'btn-primary'} btn-outline`}
+                        className={`btn btn-xs ${saved[alumno.id] ? 'btn-success' : saveError[alumno.id] ? 'btn-error' : 'btn-primary'} btn-outline`}
                         disabled={saving === alumno.id}
                         onClick={() => handleGuardar(alumno.id)}
                       >
                         {saving === alumno.id
                           ? <span className="loading loading-spinner loading-xs" />
-                          : saved[alumno.id] ? '✓ Guardado' : 'Guardar'}
+                          : saved[alumno.id] ? '✓ Guardado' : saveError[alumno.id] ? '✗ Error' : 'Guardar'}
                       </button>
+                      {saveError[alumno.id] && (
+                        <p className="text-xs text-error max-w-24 leading-tight">{saveError[alumno.id]}</p>
+                      )}
                       {calExistente && (
                         <button className="btn btn-xs btn-outline btn-secondary"
                           onClick={() => handleRetro(alumno.id)}>
